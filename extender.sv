@@ -43,7 +43,7 @@ module Extender #(parameter WIDTH = 32) (
             2'd0 : out = {{21{in[31]}}, in[30:20]};                                 //I
             2'd1 : out = {{21{in[31]}},in[30:25],in[11:7]};                         //S
             2'd2 : out = {{20{in[31]}},in[7],in[30:25],in[11:8],1'b0};              //SB
-            2'd3 : out = {in[31],in[19:12],in[20],in[30:21],12'b0};                 //U
+            2'd3 : out = {in[31:12],12'b0};                                         //U
             default: begin
                 out = 32'bx;
             end

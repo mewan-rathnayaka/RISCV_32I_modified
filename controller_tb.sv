@@ -9,7 +9,7 @@
 //              : For RISC 32I processor
 //              : Start from version2
 //
-// Version      : 2.0
+// Version      : 4.0
 //
 
 module Controller_tb;
@@ -17,10 +17,11 @@ module Controller_tb;
 
     localparam WIDTH = 32;
 
-    logic rst, zero, clk;
+    logic clk, rst, zero;
     logic [WIDTH - 1 : 0] instr;
-    logic alu_src, pc_src, result_src, data_write_en, reg_write_en;
-    logic [1:0] imm_src;
+    logic alu_src_2, alu_src_1, data_write_en, reg_write_en;
+    logic [1:0] pc_src, result_src, imm_src;
+    logic [2:0] ls_src;
     logic [3:0] alu_control;
 
     Controller dut(.*);
@@ -34,14 +35,61 @@ module Controller_tb;
 
     initial begin
         {rst, zero, instr, clk} = 0;
-        //Checking add instr 
-        instr <= 32'h2081B3;
-        #10
-        $display("alu_src = %b, pc_src = %b, result_src = %b", alu_src, pc_src, result_src );
-        $display("data_write_en = %b, reg_write_en = %b", data_write_en, reg_write_en);
-        $display("imm_src = %b, alu_control = %b", imm_src, alu_control);
 
-    #(10*2)
+        #(PERIOD)
+
+        //*I type -Load
+        instr = 32'h232BB7;                  //LUI
+        @(posedge clk)
+        #(PERIOD)
+
+        instr = 32'h232C17;                  //AUIPC
+        @(posedge clk)
+        #(PERIOD)
+
+        //*Control T- I type
+        instr = 32'h840667;                  //JALR
+        @(posedge clk)
+        #(PERIOD)
+
+        //*SB type instructions
+        instr <= 32'h418463;                 //BEQ
+        zero <= 1;
+        @(posedge clk)
+        #(PERIOD)
+
+        instr <= 32'h419463;                 //BNE
+        zero <= 0;
+        @(posedge clk)
+        #(PERIOD)
+
+        //*S type instructions
+        instr <= 32'hC22583;                 //LW
+        zero <= 0;
+        @(posedge clk)
+        #(PERIOD)
+
+        instr <= 32'hF19AA3;                 //SH
+        zero <= 0;
+        @(posedge clk)
+        #(PERIOD)   
+
+        instr <= 32'h100D903;                 //LHU
+        zero <= 0;
+        @(posedge clk)
+        #(PERIOD)
+
+        //*I type
+        instr = 32'h90013;                   //ADDI
+        @(posedge clk)
+        #(PERIOD)
+
+        //*R type
+        instr = 32'h232433;                   //SLT
+        @(posedge clk)
+        #(PERIOD)
+
+    #(PERIOD*2)
     $finish();
     end
 endmodule

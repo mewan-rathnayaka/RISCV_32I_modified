@@ -37,16 +37,16 @@ module ALU #(parameter WIDTH = 32) (
 
             //For branching
             //Not equal
-            4'b0111:out = (src_a != src_b) ? 32'd0 : 32'dx;   //NEQ
+            4'b0111:out = (src_a != src_b) ? 32'd0 : {32{1'bx}};   //NEQ
             //Less than 
-            4'b0100:out = (src_a < src_b)  ? 32'd0 : 32'dx;   //LST
+            4'b0100:out = (src_a < src_b)  ? 32'd0 : {32{1'bx}};   //LST
             //greater than or equal
-            4'b0101:out = (src_a >= src_b) ? 32'd0 : 32'dx;   //GTE
+            4'b0101:out = (src_a >= src_b) ? 32'd0 : {32{1'bx}};   //GTE
 
             //Less than unsigned
-            4'b1100:out = (src_a*1'b1 < src_b*1'b1)  ? 32'd0 : 32'dx;   //LSTU
+            4'b1100:out = (src_a*1'b1 < src_b*1'b1)  ? 32'd0 : {32{1'bx}};   //LSTU
             //greater than or equal unsigned
-            4'b1101:out = (src_a*1'b1 >= src_b*1'b1) ? 32'd0 : 32'dx;   //GTEU
+            4'b1101:out = (src_a*1'b1 >= src_b*1'b1) ? 32'd0 : {32{1'bx}};   //GTEU
 
             //Unsigned multiplication
             4'b1010:out = src_a*1'b1 * src_b*1'b1;          //UMUL

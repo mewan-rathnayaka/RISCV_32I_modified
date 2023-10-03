@@ -11,17 +11,22 @@
 // Version      : 4.0 Adding LS_extender
 //
 
-//Inputs    : 32 bit instruction    |
+//Inputs    : instr                 | 32 bit instruction 
 //          : zero                  | From branching
 //          : reset                 | hard reset (asynchronous)
+//          : clk                   | clock signal
 
 //Outputs   : imm_src               | To extender
 //          : reg_write_en          | To register write
 //          : data_write_en         | To data write
-//          : alu_src               | Mux choosing for src_b
+//          : alu_src_1             | Mux choosing for src_a
+//          : alu_src_2             | Mux choosing for src_b
 //          : result_src            | Mux choosing the write_reg source
 //          : pc_src                | Mux choosing the bnext pc source 
+//          : alu_control           | Control signals for ALU
+//          : ls_src                | Control signals for LS_extender
 //      
+
 module Controller #(parameter WIDTH = 32) (
     input logic clk, rst, zero, 
     input logic [WIDTH - 1 : 0] instr,
@@ -42,20 +47,33 @@ module Controller #(parameter WIDTH = 32) (
     //Retriving data from ROM
 
     //Setting index for instructions
-    always_comb begin
-        casez ({instr[31:25], instr[14:12], instr[6:0]})
+    always_ff @(posedge clk) begin
+        casex ({instr[31:25], instr[14:12], instr[6:0]})
 
             17'bxxxxxxx_xxx_0110111 : index = 6'd0;        //LUI
-            17'bxxxxxxx_xxx_0110111 : index = 6'd1;        //AUIPC
+            17'bxxxxxxx_xxx_0010111 : index = 6'd1;        //AUIPC
             //!17'bxxxxxxx_xxx_1101111 : index = 6'd2;        //JAL
             17'bxxxxxxx_000_1100111 : index = 6'd3;        //JALR
 
-            17'bxxxxxxx_000_1100011 : index = 6'd4;        //BEQ
-            17'bxxxxxxx_001_1100011 : index = 6'd5;        //BNE
-            17'bxxxxxxx_100_1100011 : index = 6'd6;        //BLT
-            17'bxxxxxxx_101_1100011 : index = 6'd7;        //BGE
-            17'bxxxxxxx_110_1100011 : index = 6'd8;        //BLTU
-            17'bxxxxxxx_111_1100011 : index = 6'd9;        //BGEU
+            //To do the branching
+            17'bxxxxxxx_000_1100011 : begin
+                index = (zero) ? 6'd4 : 6'd39;              //BEQ
+            end 
+            17'bxxxxxxx_001_1100011 : begin
+                index = (zero) ? 6'd5 : 6'd40;              //BNE
+            end 
+            17'bxxxxxxx_100_1100011 : begin
+                index = (zero) ? 6'd6 : 6'd41;              //BLT
+            end 
+            17'bxxxxxxx_101_1100011 : begin
+                index = (zero) ? 6'd7 : 6'd42;              //BGE
+            end 
+            17'bxxxxxxx_110_1100011 : begin
+                index = (zero) ? 6'd8 : 6'd43;              //BLTU
+            end 
+            17'bxxxxxxx_111_1100011 : begin
+                index = (zero) ? 6'd9 : 6'd44;              //BGEU
+            end 
 
             17'bxxxxxxx_000_0000011 : index = 6'd10;        //LB
             17'bxxxxxxx_001_0000011 : index = 6'd11;        //LH
@@ -90,7 +108,7 @@ module Controller #(parameter WIDTH = 32) (
 
             //! Need to add UMUL and array copy
 
-            17'bxxxxxxx_xxx_0111111 : index = 6'd37;        //FENCE      
+            17'b0000001_000_0110011 : index = 6'd37;        //UMUL   
 
         default: index = {6{1'bx}};
         endcase
@@ -101,17 +119,18 @@ module Controller #(parameter WIDTH = 32) (
     //  15:14  |      13      |     12    |     11    |      10:7     |      6        |     5:4    |  3:2   |  1:0
     //  ls_src | reg_write_en | alu_src_1 | alu_src_2 |  alu_control  | data_write_en | result_src | pc_src |imm_src
 
-    assign ls_src          = store[index][15:14];   
-    assign reg_write_en    = store[index][13];
-    assign alu_src_1       = store[index][12];
-    assign alu_src_2       = store[index][11];
-    assign alu_control     = store[index][10:7];
-    assign data_write_en   = store[index][6];
-    assign result_src      = store[index][5:4];
-    //!Will need to change this & zero 
-    assign pc_src          = (store[index][3:2] & zero);
-    assign imm_src         = store[index][1:0];
-
+    always_ff @(posedge clk) begin
+        ls_src          <= store[index][15:14];   
+        reg_write_en    <= store[index][13];
+        alu_src_1       <= store[index][12];
+        alu_src_2       <= store[index][11];
+        alu_control     <= store[index][10:7];
+        data_write_en   <= store[index][6];
+        result_src      <= store[index][5:4];
+        pc_src          <= store[index][3:2];
+        imm_src         <= store[index][1:0];  
+    end
+    
     //Setting control signals
 
     
@@ -163,6 +182,19 @@ module Controller #(parameter WIDTH = 32) (
     assign store[34] = 17'b000_100_1011_000_00_xx;                  //SRA
     assign store[35] = 17'b000_100_0001_000_00_xx;                  //OR
     assign store[36] = 17'b000_100_0000_000_00_xx;                  //AND
+
+    //*New
+    assign store[37] = 17'b000_100_1010_000_00_xx;                  //UMUL
+
+
+    //*SB type - condition not satisfied
+    assign store[39]  = 17'b000_000_0110_0xx_00_10;                 //BEQ
+    assign store[40]  = 17'b000_000_0111_0xx_00_10;                 //BNE
+    assign store[41]  = 17'b000_000_0100_0xx_00_10;                 //BLT
+    assign store[42]  = 17'b000_000_0101_0xx_00_10;                 //BGE
+    assign store[43]  = 17'b000_000_1100_0xx_00_10;                 //BLTU
+    assign store[44]  = 17'b000_000_1101_0xx_00_10;                 //BGEU
+
 
     
 endmodule

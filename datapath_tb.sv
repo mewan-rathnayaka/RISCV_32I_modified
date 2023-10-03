@@ -41,32 +41,41 @@ module Datapath_tb;
         rst = 1;
         #(PERIOD)
         rst = 0;
+        
+        //*I type -Load
 
         //LUI x[23] = sext(562 << 12)
         @(posedge clk)
         #1
-        instr <= 25'h1080C; pc_src <= 2'b0; alu_src_2 <= 0; result_src <= 2'b11; reg_write_en <= 1;
+        instr <= 25'h4657; pc_src <= 2'b0; alu_src_2 <= 0; result_src <= 2'b11; reg_write_en <= 1;
         imm_src <= 2'b11; alu_control <= 4'b0010; alu_src_1 <= 0;
 
         //Using ADDI to check rd[0] = rs[23] + 0
         @(posedge clk)
         #1
-        instr <= 25'h1200; pc_src <= 2'b00; alu_src_2 <= 1; result_src <= 2'b00; reg_write_en <= 1;
+        instr <= 25'h1700; pc_src <= 2'b00; alu_src_2 <= 1; result_src <= 2'b00; reg_write_en <= 1;
         imm_src <= 2'b00; alu_control <= 4'b0010; data_in <= 32'h0; 
+        #5 
+        $display("alu_out = %b",alu_out);
         
 
         //AUIPC x[24] = pc + sext(562 << 12)
         @(posedge clk)
         #1
-        instr <= 25'h1080C; pc_src <= 2'b0; alu_src_2 <= 1; result_src <= 2'b0; reg_write_en <= 1;
+        instr <= 25'h4658; pc_src <= 2'b0; alu_src_2 <= 1; result_src <= 2'b0; reg_write_en <= 1;
         imm_src <= 2'b11; alu_control <= 4'b0010; alu_src_1 <= 1;
 
         //Using ADDI to check rd[0] = rs[24] + 0
         @(posedge clk)
         #1
-        instr <= 25'h1200; pc_src <= 2'b00; alu_src_2 <= 1; result_src <= 2'b00; reg_write_en <= 1;
-        imm_src <= 2'b00; alu_control <= 4'b0010; data_in <= 32'h0; 
+        instr <= 25'h1800; pc_src <= 2'b00; alu_src_2 <= 1; result_src <= 2'b00; reg_write_en <= 1;
+        imm_src <= 2'b00; alu_control <= 4'b0010; data_in <= 32'h0; alu_src_1 <= 0;
 
+        //Reseting r0 using ADDI r0 = r9 + 0
+        @(posedge clk)
+        #1
+        instr <= 25'h900; pc_src <= 2'b00; alu_src_2 <= 1; result_src <= 2'b00; reg_write_en <= 1;
+        imm_src <= 2'b00; alu_control <= 4'b0010; data_in <= 32'h0; alu_src_1 <= 0;
 
 
         @(posedge clk)
@@ -128,7 +137,7 @@ module Datapath_tb;
         instr <= 25'h20131; pc_src <= 2'b0; alu_src_2 <= 1; result_src <= 2'b1; reg_write_en <= 1;
         imm_src <= 2'b0; alu_control <= 4'b0010; data_in <= 32'h9BDFC000; ls_src <= 1;
 
-        //SB M[x[3] + sext(21)] = x[r15][15:0]
+        //SH M[x[3] + sext(21)] = x[r15][15:0]
         @(posedge clk)
         #1
         instr <= 25'h1E335; pc_src <= 2'b0; alu_src_2 <= 1; result_src <= 2'b0; reg_write_en <= 0;
