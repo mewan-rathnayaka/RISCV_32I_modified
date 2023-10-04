@@ -13,7 +13,7 @@
 
 //PC bus width is 5 bits since instruction mem spaces are 64
 module PC #(parameter WIDTH = 32) (
-    input logic clk, rst,
+    input logic clk, rst,en,
     input logic [WIDTH - 1: 0] in,
     output logic [WIDTH - 1: 0] out
 );
@@ -24,7 +24,8 @@ module PC #(parameter WIDTH = 32) (
     always_ff @(posedge clk ) begin
         if (rst) begin
             out <= 'd0;
-        end else 
+        end else if (en) begin
             out <= in;
+        end
     end
 endmodule

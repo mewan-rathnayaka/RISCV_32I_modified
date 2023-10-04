@@ -7,14 +7,15 @@
 //              :
 // Description  : Testbench for the checking of datapath in the processor 
 //
-// Version      : 2.0
+// Version      : 4.0 Completing instructions running
+//              : Multi_cycle
 //
 
 module Datapath_tb; 
     localparam WIDTH = 32;
 
     logic clk, rst;
-    logic alu_src_2, alu_src_1, reg_write_en;
+    logic alu_src_2, alu_src_1, reg_write_en, pc_en;
     logic [1:0] result_src, pc_src, imm_src;
     logic [2:0] ls_src;
     logic [3:0] alu_control;
@@ -34,13 +35,13 @@ module Datapath_tb;
 
     initial begin
         {clk, rst, pc_src,alu_src_1, alu_src_2, result_src, reg_write_en, ls_src,
-         imm_src, alu_control, instr, data_in} = 0;
+         imm_src, alu_control, instr, data_in, pc_en} = 0;
         //Since ls_src will not be used other than type S, it will be not be written explicitly
         //in other places 
 
         rst = 1;
         #(PERIOD)
-        rst = 0;
+        rst <= 0; pc_en <= 1;
         
         //*I type -Load
 
@@ -229,7 +230,7 @@ module Datapath_tb;
         instr <= 25'h8C1; pc_src <= 2'b0; alu_src_2 <= 0; result_src <= 2'b0 ; reg_write_en <= 1;
         imm_src <= 2'bx; alu_control <= 4'b0001;
 
-        //SLTU r8, r6 < r2 r11
+        //SLTU r8, r6 < r2 
         @(posedge clk)
         #1
         instr <= 25'h4648; pc_src <= 2'b0; alu_src_2 <= 0; result_src <= 2'b0 ; reg_write_en <= 1;

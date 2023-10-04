@@ -8,7 +8,7 @@
 // Description  : Microcontroller type controller for RISC 32I processor
 //              : Start from version2
 //
-// Version      : 4.0 Adding LS_extender
+// Version      : 4.0 Adding LS_extender, multi_cycle
 //
 
 //Inputs    : instr                 | 32 bit instruction 
@@ -30,14 +30,14 @@
 module Controller #(parameter WIDTH = 32) (
     input logic clk, rst, zero, 
     input logic [WIDTH - 1 : 0] instr,
-    output logic alu_src_2, alu_src_1, data_write_en, reg_write_en,
+    output logic alu_src_2, alu_src_1, data_write_en, reg_write_en, multi_cy,
     output logic [1:0] pc_src, result_src, imm_src,
     output logic [2:0] ls_src,
     output logic [3:0] alu_control
     
 );
     //Initating a ROM with appropriate depth 47 instructions
-    logic [16:0] store [0 : 47];
+    logic [17:0] store [0 : 47];
 
     //           |   31:25       |  24:20   |  19:15  | 14:12      |  11:7     |  6:0
     //Size       |      7        |    5     |   5     |    3       |    5      |    7
@@ -108,7 +108,9 @@ module Controller #(parameter WIDTH = 32) (
 
             //! Need to add UMUL and array copy
 
-            17'b0000001_000_0110011 : index = 6'd37;        //UMUL   
+            17'b0000000_000_0110000 : index = 6'd37;        //UMUL
+            17'bxxxxxxx_000_0000000 : index = 6'd38;        //MEMC
+               
 
         default: index = {6{1'bx}};
         endcase
@@ -118,9 +120,10 @@ module Controller #(parameter WIDTH = 32) (
     //Control signal format
     //  15:14  |      13      |     12    |     11    |      10:7     |      6        |     5:4    |  3:2   |  1:0
     //  ls_src | reg_write_en | alu_src_1 | alu_src_2 |  alu_control  | data_write_en | result_src | pc_src |imm_src
-
+    //   16 - for multicycle (handled by seperate module)
     always_ff @(posedge clk) begin
-        ls_src          <= store[index][15:14];   
+        multi_cy        <= store[index][17];
+        ls_src          <= store[index][16:14];   
         reg_write_en    <= store[index][13];
         alu_src_1       <= store[index][12];
         alu_src_2       <= store[index][11];
@@ -185,7 +188,7 @@ module Controller #(parameter WIDTH = 32) (
 
     //*New
     assign store[37] = 17'b000_100_1010_000_00_xx;                  //UMUL
-
+    assign store[38] = 18'b1_000_100_0010_000_00_xx;                //MEMC - NOP signals
 
     //*SB type - condition not satisfied
     assign store[39]  = 17'b000_000_0110_0xx_00_10;                 //BEQ

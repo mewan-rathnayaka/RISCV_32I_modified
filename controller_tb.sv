@@ -19,7 +19,7 @@ module Controller_tb;
 
     logic clk, rst, zero;
     logic [WIDTH - 1 : 0] instr;
-    logic alu_src_2, alu_src_1, data_write_en, reg_write_en;
+    logic alu_src_2, alu_src_1, data_write_en, reg_write_en, multi_cy;
     logic [1:0] pc_src, result_src, imm_src;
     logic [2:0] ls_src;
     logic [3:0] alu_control;
@@ -80,14 +80,24 @@ module Controller_tb;
         #(PERIOD)
 
         //*I type
-        instr = 32'h90013;                   //ADDI
+        instr <= 32'h90013;                  //ADDI
         @(posedge clk)
         #(PERIOD)
 
         //*R type
-        instr = 32'h232433;                   //SLT
+        instr <= 32'h232433;                 //SLT
         @(posedge clk)
         #(PERIOD)
+
+        //*New
+        instr <= 32'h2081B0;                 //UMUL
+        @(posedge clk)
+        #(PERIOD)
+
+        instr <= 32'h810A00;                  //MEMC
+        @(posedge clk)
+        #(PERIOD)
+
 
     #(PERIOD*2)
     $finish();

@@ -9,13 +9,14 @@
 //              : Controller to be connected externally
 //
 // Version      : 4.0 Completing instructions running
+//              : Multi_cycle
 //
 
 //PC_SIZE = $clog2(DEPTH = 64)
 module Datapath #(parameter WIDTH = 32, DEPTH = 64) (
     //With controller
     input logic clk, rst,
-    input logic alu_src_2, alu_src_1,reg_write_en,
+    input logic alu_src_2, alu_src_1,reg_write_en,pc_en,
     input logic [1:0] result_src, pc_src, imm_src,
     input logic [2:0] ls_src,
     input logic [3:0] alu_control,
@@ -57,7 +58,7 @@ module Datapath #(parameter WIDTH = 32, DEPTH = 64) (
 
 
     //PC
-    PC              pc(.clk(clk), .rst(rst), .in(pc_target_out), .out(pc_out));
+    PC              pc(.clk(clk), .rst(rst), .en(pc_en), .in(pc_target_out), .out(pc_out));
     Adder_PC        pcplus_4(.in(pc_out),    .out(adder_pc_out));
     //With SLL 1 in branch
     Adder_Branch    pcbranch(.pc_in(pc_out), .branch({ext_out[WIDTH - 2:0],1'b0}),
